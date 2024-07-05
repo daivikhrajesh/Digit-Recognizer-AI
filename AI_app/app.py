@@ -4,19 +4,13 @@ import numpy as np
 from tensorflow.keras.preprocessing import image as keras_image
 from tensorflow.keras.models import load_model
 from PIL import Image
-import tempfile
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = './static/uploads'
 app.config['mnist_cnn.h5'] = 'mnist_cnn.h5'  # Path to your trained model file
 
 # Load the trained model
-model = None
-
-def load_model_if_needed():
-    global model
-    if not model:
-        model = load_model(app.config['mnist_cnn.h5'])
+model = load_model(app.config['mnist_cnn.h5'])
 
 # Function to predict digits from an image file
 def predict_digit_from_file(image_path):
@@ -41,8 +35,6 @@ def index():
 
 @app.route('/upload', methods=['POST'])
 def upload():
-    load_model_if_needed()
-
     if 'file' not in request.files:
         return redirect(url_for('index'))
 
@@ -50,15 +42,14 @@ def upload():
     if file.filename == '':
         return redirect(url_for('index'))
 
-    # Save the uploaded file to a temporary location
-    temp_file = tempfile.NamedTemporaryFile(delete=False)
-    file.save(temp_file.name)
+    # Save the uploaded file to the upload folder
+    file_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
+    file.save(file_path)
 
     # Predict digit
-    predicted_digit = predict_digit_from_file(temp_file.name)
+    predicted_digit = predict_digit_from_file(file_path)
 
-    return render_template('upload.html', file_path=temp_file.name, predicted_digit=predicted_digit)
+    return render_template('upload.html', file_path=file_path, predicted_digit=predicted_digit)
 
 if __name__ == '__main__':
-    load_model_if_needed()
     app.run(debug=True)

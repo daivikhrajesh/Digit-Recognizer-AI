@@ -1,4 +1,4 @@
-tensorflow
+//tensorflow
 flask
-numpy
-pillow
+//numpy
+//pillow
